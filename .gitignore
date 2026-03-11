@@ -1,22 +1,25 @@
-# 컴파일 결과물 및 빌드 폴더
-/build/
-/out/
+# Gradle
 .gradle/
-bin/
+build/
 
-# 인텔리제이 설정 파일 (팀원마다 설정이 다를 수 있음)
+# IntelliJ
 .idea/
-*.iws
 *.iml
-*.ipr
+out/
 
-# 로그 파일
-*.log
-
-# 운영체제 생성 파일
+# OS
 .DS_Store
 Thumbs.db
 
-# 민감 정보 (DB 비밀번호 등 - 나중에 생기면 추가)
-# application-local.yml
-# .env
+# logs
+*.log
+logs/
+
+# env
+.env
+.env.*
+
+# local config
+application-local.yml
+application-local.properties
+.DS_Store
