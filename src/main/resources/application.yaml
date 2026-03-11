@@ -1,4 +1,7 @@
 spring:
+  application:
+    name: findex
+
   datasource:
     url: jdbc:postgresql://aws-1-ap-south-1.pooler.supabase.com:6543/postgres?prepareThreshold=0
     username: postgres.rfxmuflolfcoedwishiu
@@ -13,3 +16,4 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
