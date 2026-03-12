@@ -15,8 +15,7 @@ import lombok.NoArgsConstructor;
 @MappedSuperclass
 public abstract class BaseEntity {
   @Id
-  @GeneratedValue(strategy = GenerationType.UUID)
-  @Column(columnDefinition = "uuid", updatable = false, nullable = false)
-  private UUID id;
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
 }
