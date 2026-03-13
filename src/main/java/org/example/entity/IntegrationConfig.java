@@ -22,13 +22,17 @@ public class IntegrationConfig extends BaseEntity {
   private IndexInfo indexInfo;
 
   @Column(name = "is_active", nullable = false)
-  private Boolean isActive = false;
+  private Boolean enabled = false;
 
   @Column(name = "last_sync_at")
   private Instant lastSyncAt;
 
-  public void updateActive(boolean status) {
-    this.isActive = status;
+  public IntegrationConfig(IndexInfo indexInfo){
+    this.indexInfo = indexInfo;
+  }
+
+  public void updateEnabled(boolean status) {
+    this.enabled = status;
   }
 
   public void updateLastSyncAt() {
