@@ -17,6 +17,7 @@ import org.example.entity.base.BaseEntity;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class IntegrationConfig extends BaseEntity {
+
   @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "index_id", nullable = false)
   private IndexInfo indexInfo;
@@ -33,5 +34,11 @@ public class IntegrationConfig extends BaseEntity {
 
   public void updateLastSyncAt() {
     this.lastSyncAt = Instant.now();
+  }
+
+
+  public IntegrationConfig(IndexInfo indexInfo) {
+    this.indexInfo = indexInfo;
+    this.isActive = false;
   }
 }
