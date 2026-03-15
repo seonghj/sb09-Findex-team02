@@ -25,3 +25,6 @@ openapi:
 findex:
   batch:
     cron: "* * 0 * * *" #
+#외부 프록시 넘겨주는 설정 추가
+server:
+  forward-headers-strategy: native
