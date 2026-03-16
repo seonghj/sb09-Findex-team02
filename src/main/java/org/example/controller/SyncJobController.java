@@ -42,15 +42,14 @@ public class SyncJobController {
 
       String worker = request.getRemoteAddr();
       List<SyncJobDto> totalResults = new ArrayList<>();
+      List<Long> targetIdList = syncRequest.indexInfoIds();
 
       if (syncRequest.indexInfoIds() == null || syncRequest.indexInfoIds().isEmpty()) {
         totalResults.addAll(integrationService.syncIndexData(
             worker, syncRequest.baseDateFrom(), syncRequest.baseDateTo(), null));
       } else {
-        for (Long id : syncRequest.indexInfoIds()) {
-          totalResults.addAll(integrationService.syncIndexData(
-              worker, syncRequest.baseDateFrom(), syncRequest.baseDateTo(), id));
-        }
+        totalResults.addAll(integrationService.syncIndexData(
+            worker, syncRequest.baseDateFrom(), syncRequest.baseDateTo(), targetIdList));
       }
       return ResponseEntity.accepted().body(totalResults);
     }

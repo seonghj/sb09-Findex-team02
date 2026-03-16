@@ -115,17 +115,17 @@ public class IntegrationService {
 //지수 데이터 연동
 @Transactional
 public List<SyncJobDto> syncIndexData(String worker, LocalDate startDate, LocalDate endDate,
-    Long indexInfoId) {
+    List<Long> indexInfoIdList) {
 
   String startDateStr = startDate.format(YYYYMMDD);
   String endDateStr = endDate.format(YYYYMMDD);
 
-  List<IndexInfo> targetIndexInfos = (indexInfoId != null)
-      ? indexInfoRepository.findById(indexInfoId).map(List::of).orElse(Collections.emptyList())
+  List<IndexInfo> targetIndexInfos = (indexInfoIdList != null && !indexInfoIdList.isEmpty())
+      ? indexInfoRepository.findAllById(indexInfoIdList)
       : indexInfoRepository.findAll();
 
   if (targetIndexInfos.isEmpty()) {
-    log.warn("[지수 데이터 연동] 대상 지수 없음. indexInfoId={}", indexInfoId);
+    log.warn("[지수 데이터 연동] 대상 지수 없음. indexInfoId={}", targetIndexInfos);
     return Collections.emptyList();
   }
 
