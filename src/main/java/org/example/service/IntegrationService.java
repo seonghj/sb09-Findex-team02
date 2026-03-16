@@ -7,11 +7,14 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.client.IndexApiClient;
 import org.example.dto.data.SyncJobDto;
+import org.example.dto.request.IndexInfoCreateRequest;
 import org.example.dto.request.IndexInfoUpdateRequest;
 import org.example.dto.response.OpenApiStockResponseDto;
 import org.example.dto.response.OpenApiStockResponseDto.Item;
@@ -23,6 +26,7 @@ import org.example.repository.IndexInfoRepository;
 import org.example.repository.IntegrationLogRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -42,40 +46,50 @@ public class IntegrationService {
   private static final int PAGE_SIZE = 500;
 
   //자수 정보 연동
-  @Transactional
   public List<SyncJobDto> syncIndexInfos(String worker) {
-    List<IndexInfo> allIndexInfos = indexInfoRepository.findAll();
-    LocalDate today = LocalDate.now();
-    String todayStr = today.format(YYYYMMDD);
+    String baseDateStr = resolveBaseDate();
+    List<Item> fetchedItems = fetchAllItems(baseDateStr);
+
+    if (fetchedItems.isEmpty()) {
+      log.warn("[지수 정보 연동] API 응답 데이터 없음. 기준일={}", baseDateStr);
+      return Collections.emptyList();
+    }
+    Map<String, IndexInfo> indexInfoMap = indexInfoRepository.findAll().stream()
+        .collect(Collectors.toMap(IndexInfo::getIndexName, i -> i));
+
     List<SyncJobDto> results = new ArrayList<>();
 
-    OpenApiStockResponseDto response = indexApiClient.getIndexData(
-        serviceKey, 1, 100, todayStr, todayStr, "json" // 넉넉하게 100건 조회
-    );
-    List<Item> fetchedItems = extractItems(response);
-
-    for (IndexInfo indexInfo : allIndexInfos) {
-      IntegrationLog job;
-      try {
-        Item matchedItem = findMatchingItem(fetchedItems, indexInfo.getIndexName()).orElse(null);
-
-        if (matchedItem != null) {
-          indexInfoService.update(indexInfo.getId(), toIndexInfoUpdateRequest(matchedItem));
-          job = IntegrationLog.createSuccess(JobType.index_info, indexInfo, Instant.now(), worker);
-        } else {
-          log.warn("[지수 정보 매칭 실패] 이름={}", indexInfo.getIndexName());
-          job = IntegrationLog.createFailed(JobType.index_info, indexInfo, Instant.now(), worker);
-        }
-
-      } catch (Exception e) {
-        job = IntegrationLog.createFailed(JobType.index_info, indexInfo, Instant.now(), worker);
-        log.error("[연동 에러] indexInfoId={}, error={}", indexInfo.getId(), e.getMessage());
-      }
-
-      integrationLogRepository.save(job);
-      results.add(syncJobMapper.toDto(job));
+    for (Item item : fetchedItems) {
+      SyncJobDto result = processItem(item, indexInfoMap, worker);
+      results.add(result);
     }
+
     return results;
+  }
+
+  //건별 트랜잭션 처리
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public SyncJobDto processItem(Item item, Map<String, IndexInfo> indexInfoMap, String worker) {
+    IntegrationLog job;
+    IndexInfo indexInfo = indexInfoMap.get(item.indexName());
+
+    try {
+      if (indexInfo != null) {
+        indexInfoService.update(indexInfo.getId(), toIndexInfoUpdateRequest(item));
+        job = IntegrationLog.createSuccess(JobType.index_info, indexInfo, Instant.now(), worker);
+        log.info("[지수 정보 수정 성공] 이름={}", item.indexName());
+      } else {
+        IndexInfo created = indexInfoService.create(toIndexInfoCreateRequest(item));
+        job = IntegrationLog.createSuccess(JobType.index_info, created, Instant.now(), worker);
+        log.info("[지수 정보 등록 성공] 이름={}", item.indexName());
+      }
+    } catch (Exception e) {
+      log.error("[연동 에러] indexName={}, error={}", item.indexName(), e.getMessage());
+      job = IntegrationLog.createFailed(JobType.index_info, indexInfo, Instant.now(), worker);
+    }
+
+    integrationLogRepository.save(job);
+    return syncJobMapper.toDto(job);
   }
 
 
@@ -103,6 +117,18 @@ public class IntegrationService {
         null
     );
   }
+  //item 데이터 toIndexInfoCreateRequest로 변환
+  private IndexInfoCreateRequest toIndexInfoCreateRequest(Item item) {
+    return new IndexInfoCreateRequest(
+        item.CategoryName(),
+        item.indexName(),
+        item.componentCount(),
+        parseLocalDate(item.infoBaseDate()),
+        item.baseIndex(),
+        false
+    );
+  }
+
   //날짜(문자열 -> LocalDate로 변환)
   private LocalDate parseLocalDate(String dateStr) {
 
@@ -117,4 +143,45 @@ public class IntegrationService {
       return null;
     }
   }
+
+//기준일 결정
+  private String resolveBaseDate() {
+    LocalDate today = LocalDate.now();
+    String todayStr = today.format(YYYYMMDD);
+
+    OpenApiStockResponseDto probeResponse = indexApiClient.getIndexData(
+        serviceKey, 1, 1, todayStr, todayStr, "json"
+    );
+
+    if (!extractItems(probeResponse).isEmpty()) {
+      return todayStr;
+    }
+
+    String yesterdayStr = today.minusDays(1).format(YYYYMMDD);
+    log.info("[기준일 fallback] 오늘({}) 데이터 없음 → 전일({}) 사용", todayStr, yesterdayStr);
+    return yesterdayStr;
+  }
+
+  //페이지네이션으로 전체 데이터 조회
+  private List<Item> fetchAllItems(String baseDateStr) {
+    List<Item> allItems = new ArrayList<>();
+    int pageNo = 1;
+
+    while (true) {
+      OpenApiStockResponseDto response = indexApiClient.getIndexData(
+          serviceKey, pageNo, PAGE_SIZE, baseDateStr, baseDateStr, "json"
+      );
+      List<Item> items = extractItems(response);
+      allItems.addAll(items);
+
+      if (items.size() < PAGE_SIZE) {
+        break;
+      }
+      pageNo++;
+    }
+
+    log.info("[지수 정보 연동] 총 {}건 조회 완료 (기준일={})", allItems.size(), baseDateStr);
+    return allItems;
+  }
+
 }
