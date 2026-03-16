@@ -33,13 +33,17 @@ public class SyncJobSpec {
         predicates.add(cb.equal(root.get("result"), request.status()));
       }
       if (request.jobTimeFrom() != null) {
-        predicates.add(cb.greaterThanOrEqualTo(root.get("jobTime"), request.jobTimeFrom()));
+        predicates.add(cb.greaterThanOrEqualTo(root.get("workedAt"), request.jobTimeFrom()));
       }
       if (request.jobTimeTo() != null) {
-        predicates.add(cb.lessThanOrEqualTo(root.get("jobTime"), request.jobTimeTo()));
+        predicates.add(cb.lessThanOrEqualTo(root.get("workedAt"), request.jobTimeTo()));
       }
       if (request.idAfter() != null) {
-        if ("asc".equalsIgnoreCase(request.sortDirection())) {
+        String direction = request.sortDirection() == null
+            ? "desc"
+            : request.sortDirection();
+
+        if ("asc".equalsIgnoreCase(direction)) {
           predicates.add(cb.greaterThan(root.get("id"), request.idAfter()));
         } else {
           predicates.add(cb.lessThan(root.get("id"), request.idAfter()));

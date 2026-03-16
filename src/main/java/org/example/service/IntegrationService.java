@@ -92,8 +92,7 @@ public class IntegrationService {
     try {
       if (indexInfo != null) {
         //indexInfoService.update(indexInfo.getId(), toIndexInfoUpdateRequest(item));
-        job = IntegrationLog.createSuccess(JobType.INDEX_INFO, indexInfo,
-            LocalDate.now(), worker);
+        job = IntegrationLog.createSuccess(JobType.INDEX_INFO, indexInfo, LocalDate.now(), worker);
         log.info("[지수 정보 수정 성공] 이름={}", item.indexName());
       } else {
         IndexInfoCreateRequest infoCreateRequest = toIndexInfoCreateRequest(item);
@@ -107,6 +106,7 @@ public class IntegrationService {
         indexInfoRepository.save(newIndex);
 
         job = IntegrationLog.createSuccess(JobType.INDEX_INFO, newIndex, LocalDate.now(), worker);
+        indexInfoRepository.save(newIndex);
         log.info("[지수 정보 등록 성공] 이름={}", item.indexName());
       }
     } catch (Exception e) {
@@ -181,7 +181,7 @@ public List<SyncJobDto> syncIndexData(String worker, LocalDate startDate, LocalD
           .orElse(null);
 
       if (existing != null) {
-        indexDataService.update(existing.getId(), toIndexDataUpdateRequest(item));
+//        indexDataService.update(existing.getId(), toIndexDataUpdateRequest(item));
         log.info("[지수 데이터 수정 성공] 이름={}, 날짜={}", item.indexName(), dataDate);
       } else {
         indexDataService.create(toIndexDataCreateRequest(item, indexInfo));
@@ -209,7 +209,6 @@ public CursorPageResponseAutoSyncConfigDto<SyncJobDto> getSyncJobs(SyncJobSearch
   ).getContent();
 
   long totalElements = integrationLogRepository.count(SyncJobSpec.of(request));
-
   boolean hasNext = fetched.size() > size;
   List<IntegrationLog> pageItems = hasNext ? fetched.subList(0, size) : fetched;
 
@@ -234,7 +233,7 @@ public CursorPageResponseAutoSyncConfigDto<SyncJobDto> getSyncJobs(SyncJobSearch
     Sort.Direction direction = "asc".equalsIgnoreCase(request.sortDirection())
         ? Sort.Direction.ASC : Sort.Direction.DESC;
     String field = "targetDate".equalsIgnoreCase(request.sortField())
-        ? "targetDate" : "jobTime";  // null이면 jobTime 기본값
+        ? "targetDate" : "workedAt";
     return Sort.by(direction, field).and(Sort.by(Sort.Direction.DESC, "id"));
   }
 
@@ -287,7 +286,7 @@ public CursorPageResponseAutoSyncConfigDto<SyncJobDto> getSyncJobs(SyncJobSearch
     LocalDate date = parseLocalDate(item.dataBaseDate());
     return new IndexDataCreateRequest(
         indexInfo.getId(),
-        date != null ? LocalDate.from(date.atStartOfDay(KST).toInstant()) : null,
+        date != null ? LocalDate.from(date.atStartOfDay(KST)) : null,
         item.openPrice(),
         item.closePrice(),
         item.highPrice(),
@@ -355,7 +354,7 @@ public CursorPageResponseAutoSyncConfigDto<SyncJobDto> getSyncJobs(SyncJobSearch
 
     while (true) {
       OpenApiStockResponseDto response = indexApiClient.getIndexData(
-          serviceKey, PAGE_SIZE, pageNo, baseDateStr , endDateStr, "json"
+          serviceKey, PAGE_SIZE, pageNo, baseDateStr, endDateStr, "json"
       );
       List<Item> items = extractItems(response);
       allItems.addAll(items);
