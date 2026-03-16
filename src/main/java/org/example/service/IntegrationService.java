@@ -91,24 +91,25 @@ public class IntegrationService {
 
     try {
       if (indexInfo != null) {
-        indexInfoService.update(indexInfo.getId(), toIndexInfoUpdateRequest(item));
-        job = IntegrationLog.createSuccess(JobType.index_info, indexInfo, Instant.now(), worker);
+        //indexInfoService.update(indexInfo.getId(), toIndexInfoUpdateRequest(item));
+        job = IntegrationLog.createSuccess(JobType.index_info, indexInfo,
+            LocalDate.now(), worker);
         log.info("[지수 정보 수정 성공] 이름={}", item.indexName());
       } else {
-        IndexInfoCreateRequest infoCreateRequest = findByIndexInfoAndBaseDateBetween(item);
+        IndexInfoCreateRequest infoCreateRequest = toIndexInfoCreateRequest(item);
 
-        IndexInfo newIndex = new IndexInfo(infoCreateRequest.indexClassification(), infoCreateRequest.indexName(), SourceType.open_api);
+        IndexInfo newIndex = new IndexInfo(infoCreateRequest.indexClassification(), infoCreateRequest.indexName(), SourceType.OPEN_API);
 
-        newIndex.setIndexDetails(infoCreateRequest.basePointInTime().atStartOfDay(ZoneId.systemDefault()).toInstant(),
+        newIndex.setIndexDetails(infoCreateRequest.basePointInTime(),
             BigDecimal.valueOf(infoCreateRequest.baseIndex())
             , infoCreateRequest.employedItemsCount());
 
-        job = IntegrationLog.createSuccess(JobType.index_info, newIndex, Instant.now(), worker);
+        job = IntegrationLog.createSuccess(JobType.index_info, newIndex, LocalDate.now(), worker);
         log.info("[지수 정보 등록 성공] 이름={}", item.indexName());
       }
     } catch (Exception e) {
       log.error("[연동 에러] indexName={}, error={}", item.indexName(), e.getMessage());
-      job = IntegrationLog.createFailed(JobType.index_info, indexInfo, Instant.now(), worker);
+      job = IntegrationLog.createFailed(JobType.index_info, indexInfo, LocalDate.now(), worker);
     }
     integrationLogRepository.save(job);
     return syncJobMapper.toDto(job);
@@ -184,12 +185,12 @@ public List<SyncJobDto> syncIndexData(String worker, LocalDate startDate, LocalD
         indexDataService.create(toIndexDataCreateRequest(item, indexInfo));
         log.info("[지수 데이터 등록 성공] 이름={}, 날짜={}", item.indexName(), dataDate);
       }
-      job = IntegrationLog.createSuccess(JobType.index_data, indexInfo, Instant.now(), worker);
+      job = IntegrationLog.createSuccess(JobType.index_data, indexInfo, LocalDate.now(), worker);
 
     } catch (Exception e) {
       log.error("[지수 데이터 연동 에러] indexName={}, date={}, error={}",
           item.indexName(), dataDate, e.getMessage());
-      job = IntegrationLog.createFailed(JobType.index_data, indexInfo, Instant.now(), worker);
+      job = IntegrationLog.createFailed(JobType.index_data, indexInfo, LocalDate.now(), worker);
     }
 
     integrationLogRepository.save(job);
@@ -249,8 +250,9 @@ public CursorPageResponseAutoSyncConfigDto<SyncJobDto> getSyncJobs(SyncJobSearch
       List<IndexInfo> indexInfos, LocalDate startDate, LocalDate endDate) {
 
     return indexInfos.stream().collect(Collectors.toMap(
-        IndexInfo::getIndexName, indexInfo -> indexDataRepository
-            .findByIndexInfoAndDateBetween(indexInfo, startDate, endDate)
+        IndexInfo::getIndexName,
+        indexInfo -> indexDataRepository
+            .findByIndexInfoAndBaseDateBetween(indexInfo, startDate, endDate)
             .stream()
             .collect(Collectors.toMap(
                 IndexData::getBaseDate,
@@ -267,12 +269,23 @@ public CursorPageResponseAutoSyncConfigDto<SyncJobDto> getSyncJobs(SyncJobSearch
         null
     );
   }
+  //item 데이터 toIndexInfoCreateRequest로 변환
+  private IndexInfoCreateRequest toIndexInfoCreateRequest(Item item) {
+    return new IndexInfoCreateRequest(
+        item.categoryName(),
+        item.indexName(),
+        item.componentCount(),
+        parseLocalDate(item.infoBaseDate()),
+        item.baseIndex().doubleValue(),
+        false
+    );
+  }
 
   private IndexDataCreateRequest toIndexDataCreateRequest(Item item, IndexInfo indexInfo) {
     LocalDate date = parseLocalDate(item.dataBaseDate());
     return new IndexDataCreateRequest(
         indexInfo.getId(),
-        date != null ? date.atStartOfDay(KST).toInstant() : null,
+        date != null ? LocalDate.from(date.atStartOfDay(KST).toInstant()) : null,
         item.openPrice(),
         item.closePrice(),
         item.highPrice(),
@@ -282,7 +295,7 @@ public CursorPageResponseAutoSyncConfigDto<SyncJobDto> getSyncJobs(SyncJobSearch
         item.tradeVolume(),
         item.tradeAmount(),
         item.marketCap(),
-        SourceType.open_api
+        SourceType.OPEN_API
     );
   }
 
