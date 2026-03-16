@@ -10,8 +10,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.example.entity.base.BaseEntity;
 import org.example.entity.type.JobType;
 import org.example.entity.type.StatusType;
@@ -22,6 +21,8 @@ import org.hibernate.type.SqlTypes;
 @Table(name = "integration_logs")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
 public class IntegrationLog extends BaseEntity {
 
   @ManyToOne(fetch = FetchType.LAZY)
@@ -51,6 +52,10 @@ public class IntegrationLog extends BaseEntity {
   @Column(name = "job_type", columnDefinition = "job_type_enum")
   private JobType jobType;
 
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  private StatusType result;
+
   public IntegrationLog(IndexInfo indexInfo, JobType jobType, StatusType status) {
     this.indexInfo = indexInfo;
     this.jobType = jobType;
@@ -65,4 +70,26 @@ public class IntegrationLog extends BaseEntity {
     this.worker = worker;
     this.workedAt = workedAt;
   }
+  public static IntegrationLog createSuccess(JobType jobType, IndexInfo indexInfo,
+      Instant targetDate, String worker) {
+    return IntegrationLog.builder()
+        .jobType(jobType)
+        .indexInfo(indexInfo)
+        .targetDate(targetDate)
+        .worker(worker)
+        .result(StatusType.success)
+        .build();
+  }
+  public static IntegrationLog createFailed(JobType jobType, IndexInfo indexInfo,
+      Instant targetDate, String worker) {
+    return IntegrationLog.builder()
+        .jobType(jobType)
+        .indexInfo(indexInfo)
+        .targetDate(targetDate)
+        .worker(worker)
+        .result(StatusType.fail)
+        .build();
+  }
+
+
 }
