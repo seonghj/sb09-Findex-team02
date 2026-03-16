@@ -43,11 +43,11 @@ public class IndexInfoService {
         IndexInfo indexInfo = new IndexInfo(
                 request.indexClassification(),
                 request.indexName(),
-                SourceType.user
+                SourceType.USER
         );
         //기준 시점, 기준 지수, 채용 종목 수를 채워넣기
         indexInfo.setIndexDetails(
-                request.basePointInTime().atStartOfDay().toInstant(java.time.ZoneOffset.UTC),
+                request.basePointInTime(),
                 BigDecimal.valueOf(request.baseIndex()),
                 request.employedItemsCount()
         );
@@ -67,7 +67,7 @@ public class IndexInfoService {
                 savedIndexInfo.getCategoryName(),
                 savedIndexInfo.getIndexName(),
                 savedIndexInfo.getComponent(),
-                savedIndexInfo.getBaseData().atZone(java.time.ZoneOffset.UTC).toLocalDate(),
+                savedIndexInfo.getBaseDate(),
                 savedIndexInfo.getBaseIndex().doubleValue(),
                 savedIndexInfo.getSourceType(),
                 savedIndexInfo.getFavorite()
