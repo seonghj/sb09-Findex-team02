@@ -9,12 +9,14 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.example.dto.data.IndexChartDto;
 import org.example.dto.data.IndexDataDto;
 import org.example.dto.request.IndexDataCreateRequest;
 import org.example.dto.request.IndexDataSearchRequest;
 import org.example.dto.request.IndexDataUpdateRequest;
 import org.example.dto.response.CursorPageResponseIndexDataDto;
 import org.example.dto.response.FavoritePerformanceResponse;
+import org.example.dto.response.RankedIndexPerformanceDto;
 import org.example.service.IndexDataService;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
@@ -94,4 +96,29 @@ public class IndexDataController {
   }
 
 
+  @Operation(summary = "지수 성과 랭킹 조회", description = "지수의 성과 분석 랭킹을 조회합니다.")
+  @GetMapping("/performance/rank")
+  public ResponseEntity<List<RankedIndexPerformanceDto>> getRankingPerformance(
+      @RequestParam(required = false) Long indexInfoId,
+      @RequestParam(required = false) String categoryName,
+      @Schema(allowableValues = {"DAILY", "WEEKLY", "MONTHLY"})
+      @RequestParam(defaultValue = "DAILY") String periodType,
+      @RequestParam(defaultValue = "10") Integer rankLimit
+  ){
+    List<RankedIndexPerformanceDto> result = indexDataService.getPerformanceRanking(indexInfoId,categoryName,periodType,rankLimit);
+    return ResponseEntity.ok(result);
+  }
+
+
+  @Operation(summary = "지수 차트 조회", description = "지수 차트 데이터를 조회합니다.")
+  @GetMapping("/chart")
+  public ResponseEntity<List<IndexChartDto>> getIndexChart(
+    @RequestParam(required = false) Long indexId,
+    @RequestParam(required = false) String categoryName,
+    @Schema(allowableValues = {"MONTHLY", "QUARTERLY", "YEARLY"})
+    @RequestParam(defaultValue = "MONTHLY") String periodType
+  ){
+    List<IndexChartDto> indexCharList = indexDataService.getIndexChart(indexId, categoryName, periodType);
+    return ResponseEntity.ok(indexCharList);
+  }
 }
