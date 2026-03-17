@@ -26,6 +26,7 @@ public class AutoSyncConfigService {
   private final AutoSyncConfigMapper autoSyncConfigMapper;
 
   // Index_info 추가 시 생성
+  @Transactional
   public AutoSyncConfigDto create(Long indexId){
 
     // index_id 값으로 index_info 객체 조회
@@ -86,6 +87,7 @@ public class AutoSyncConfigService {
 
   }
 
+  @Transactional
   public AutoSyncConfigDto update(Long id, AutoSyncConfigUpdateRequest request){
     AutoSyncConfig config = autoSyncConfigRepository.findById(id).orElseThrow();
     config.updateEnabled(request.enabled());
@@ -93,6 +95,7 @@ public class AutoSyncConfigService {
 
   }
 
+  @Transactional
   public void delete(Long id){
     autoSyncConfigRepository.deleteById(id);
   }
