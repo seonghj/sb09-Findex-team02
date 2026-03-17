@@ -6,17 +6,19 @@ import org.example.entity.AutoSyncConfig;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface AutoSyncConfigRepository extends JpaRepository<AutoSyncConfig, Long> {
 
   @Query("SELECT c FROM AutoSyncConfig c " +
+      "JOIN FETCH c.indexInfo " + // ⬅️ 핵심: 연관된 엔티티를 한 번에 가져옴
       "WHERE (:indexInfoId IS NULL OR c.indexInfo.id = :indexInfoId) " +
       "AND (:enabled IS NULL OR c.enabled = :enabled) " +
       "AND (:idAfter IS NULL OR c.id > :idAfter) ")
   List<AutoSyncConfig> findConfigsByCursor(
-      Long indexInfoId,
-      Boolean enabled,
-      Long idAfter,
+      @Param("indexInfoId") Long indexInfoId,
+      @Param("enabled") Boolean enabled,
+      @Param("idAfter") Long idAfter,
       Pageable pageable);
 
   @Query("SELECT COUNT(c) FROM AutoSyncConfig c " +

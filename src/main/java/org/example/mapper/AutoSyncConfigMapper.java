@@ -9,5 +9,6 @@ import org.mapstruct.Mapping;
 public interface AutoSyncConfigMapper {
   @Mapping(source = "indexInfo.id", target = "indexInfoId")
   @Mapping(source = "indexInfo.categoryName", target = "indexClassification")
+  @Mapping(source = "indexInfo.indexName", target = "indexName")
   AutoSyncConfigDto toDto(AutoSyncConfig autoSyncConfig);
 }
