@@ -12,6 +12,7 @@ import org.example.dto.request.IndexDataCreateRequest;
 import org.example.dto.request.IndexDataSearchRequest;
 import org.example.dto.request.IndexDataUpdateRequest;
 import org.example.dto.response.FavoritePerformanceResponse;
+import org.example.dto.response.RankedIndexPerformanceDto;
 import org.example.service.IndexDataService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -68,5 +69,18 @@ public class IndexDataController {
       @RequestParam String periodType
   ){
     return ResponseEntity.ok(indexDataService.getFavoritePerformances(periodType));
+  }
+
+  @Operation(summary = "지수 성과 랭킹 조회", description = "지수의 성과 분석 랭킹을 조회합니다.")
+  @GetMapping("/performance/rank")
+  public ResponseEntity<List<RankedIndexPerformanceDto>> getRankingPerformance(
+      @RequestParam(required = false) Long indexInfoId,
+      @RequestParam(required = false) String categoryName,
+      @Schema(allowableValues = {"DAILY", "WEEKLY", "MONTHLY"})
+      @RequestParam(defaultValue = "DAILY") String periodType,
+      @RequestParam(defaultValue = "10") Integer rankLimit
+  ){
+    List<RankedIndexPerformanceDto> result = indexDataService.getPerformanceRanking(indexInfoId,categoryName,periodType,rankLimit);
+    return ResponseEntity.ok(result);
   }
 }
