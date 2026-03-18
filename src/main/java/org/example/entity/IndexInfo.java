@@ -67,9 +67,9 @@ public class IndexInfo {
     // 생성자 파라미터가 너무 길어져서 분리
     // 생성자 호출하면서 같이 사용해야함
 
-    public void setIndexDetails(LocalDate baseData, BigDecimal baseIndex, Integer component) {
+    public void setIndexDetails(LocalDate baseDate, BigDecimal baseIndex, Integer component) {
 
-        this.baseDate = baseData;
+        this.baseDate = baseDate;
         this.baseIndex = baseIndex;
         this.component = component;
     }
