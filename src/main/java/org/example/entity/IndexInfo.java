@@ -8,6 +8,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.example.dto.request.IndexInfoUpdateRequest;
 import org.example.entity.base.BaseEntity;
 import org.example.entity.type.SourceType;
 
@@ -88,4 +89,19 @@ public class IndexInfo {
             throw new IllegalArgumentException();
         }
     }
+    //업데이트 메서드 추가
+//    public void updateFromApi(IndexInfoUpdateRequest request) {
+//        if (request.employedItemsCount() != null) {
+//            this.component = request.employedItemsCount();
+//        }
+//        if (request.basePointInTime() != null) {
+//            this.baseDate = request.basePointInTime();
+//        }
+//        if (request.baseIndex() != null) {
+//            this.baseIndex = request.baseIndex();
+//        }
+//        if (request.favorite() != null) {
+//            this.favorite = request.favorite();
+//        }
+//    }
 }
