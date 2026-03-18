@@ -38,6 +38,15 @@ public interface IndexDataRepository extends JpaRepository<IndexData, Long> {
       "AND i.indexInfo.favorite = true " + // 💡 IndexInfo의 favorite 필드가 true인 것만!
       "AND i.baseDate IN :dates " +
       "ORDER BY i.indexInfo.id ASC, i.baseDate DESC")
+  List<IndexData> findAllFavoriteBaseData(
+      @Param("ids") List<Long> ids,
+      @Param("dates") List<LocalDate> dates
+  );
+
+  @Query("SELECT i FROM IndexData i " +
+      "WHERE i.indexInfo.id IN :ids " +
+      "AND i.baseDate IN :dates " +
+      "ORDER BY i.indexInfo.id ASC, i.baseDate DESC")
   List<IndexData> findAllBaseData(
       @Param("ids") List<Long> ids,
       @Param("dates") List<LocalDate> dates
