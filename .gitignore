@@ -22,3 +22,7 @@ logs/
 # local config
 application-local.yml
 application-local.properties
+
+
+# QueryDSL QClass 생성 경로 무시
+/build/generated/

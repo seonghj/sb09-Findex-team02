@@ -2,9 +2,12 @@ package org.example.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.example.dto.request.IndexInfoCreateRequest;
+import org.example.dto.request.IndexInfoSearchRequest;
 import org.example.dto.request.IndexInfoUpdateRequest;
+import org.example.dto.response.CursorPageResponseIndexInfoDto;
 import org.example.dto.response.IndexInfoResponseDto;
 import org.example.service.IndexInfoService;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +30,19 @@ public class IndexInfoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    /**
+     * 지수 정보 목록 조회
+     */
+    @GetMapping
+    public ResponseEntity<CursorPageResponseIndexInfoDto<IndexInfoResponseDto>> findIndexInfosByCursor(
+            @ParameterObject IndexInfoSearchRequest request
+    ) {
+        return ResponseEntity.ok(indexInfoService.findIndexInfosByCursor(request));
+    }
+
+    /**
+     * 지수 정보 수정
+     */
     @PatchMapping("/{id}")
     public ResponseEntity<IndexInfoResponseDto> updateIndexInfo(
             @PathVariable Long id,

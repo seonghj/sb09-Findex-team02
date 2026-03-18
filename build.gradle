@@ -64,6 +64,12 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test' // 개별 테스트 스타터 통합
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
+    // 7. QueryDSL
+    implementation 'com.querydsl:querydsl-jpa:5.1.0:jakarta'
+    annotationProcessor "com.querydsl:querydsl-apt:5.1.0:jakarta"
+    annotationProcessor "jakarta.annotation:jakarta.annotation-api"
+    annotationProcessor "jakarta.persistence:jakarta.persistence-api"
+
     implementation 'org.jspecify:jspecify:1.0.0'
     runtimeOnly 'org.postgresql:postgresql'
 

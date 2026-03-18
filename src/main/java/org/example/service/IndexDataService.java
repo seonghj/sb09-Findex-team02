@@ -289,7 +289,7 @@ public class IndexDataService {
     }
 
     List<LocalDate> baseDates = List.of(today,baseDate);
-    List<IndexData> dataList = indexDataRepository.findAllBaseData(favoriteIndexIds,baseDates);
+    List<IndexData> dataList = indexDataRepository.findAllFavoriteBaseData(favoriteIndexIds,baseDates);
 
 
     return dataList.stream()
@@ -403,7 +403,7 @@ public class IndexDataService {
         .toList();
   }
   @Transactional
-  public List<IndexChartDto> getIndexChart(Long indexChartId, String periodType, String categoryName){
+  public List<IndexChartDto> getIndexChart(Long indexChartId, String categoryName, String periodType){
     List<LocalDate> lateDates = indexDataRepository.findDistinctByBaseDate(PageRequest.of(0,1));
     if(lateDates == null || lateDates.isEmpty()) {
       throw new NoSuchElementException("데이터가 충분하지 않습니다. 현재 DB 날짜 개수: {}");
@@ -480,7 +480,7 @@ public class IndexDataService {
               info.getId(),
               info.getCategoryName(),
               info.getIndexName(),
-              periodType,
+              type,
               basicPoints,
               ma5Points,
               ma20Points
