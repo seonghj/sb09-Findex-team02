@@ -1,6 +1,8 @@
 package org.example.scheduler.task;
 
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +35,7 @@ public class AutoSyncTask implements BatchTask {
     LocalDate minLastSync = configList.stream().
         map(AutoSyncConfig::getLastSyncAt)
         .filter(Objects::nonNull)
+        .map(instant -> instant.atZone(ZoneId.systemDefault()).toLocalDate())
         .min(LocalDate::compareTo)
         .orElse(LocalDate.now());
 
@@ -43,7 +46,7 @@ public class AutoSyncTask implements BatchTask {
     List<SyncJobDto> integrationLogList = integrationService.autoSyncIndexData(targetList, configList, minLastSync);
 
     configList.forEach(config->{
-      config.updateLastSyncAt(LocalDate.now());
+      config.updateLastSyncAt(Instant.now());
     });
 
     log.info("[지수 데이터 자동 연동 성공] 날짜={}, 개수={}", startSyncTime,  integrationLogList.size());

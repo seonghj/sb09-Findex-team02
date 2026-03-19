@@ -9,6 +9,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+import java.time.Instant;
 import java.time.LocalDate;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -41,7 +42,7 @@ public class AutoSyncConfig {
   private Boolean enabled = false;
 
   @Column(name = "last_sync_at")
-  private LocalDate lastSyncAt = LocalDate.now();
+  private Instant lastSyncAt = Instant.now();
 
   public AutoSyncConfig(IndexInfo indexInfo){
     this.indexInfo = indexInfo;
@@ -51,8 +52,8 @@ public class AutoSyncConfig {
     this.enabled = status;
   }
 
-  public void updateLastSyncAt(LocalDate date) {
-    this.lastSyncAt = date;
+  public void updateLastSyncAt(Instant time) {
+    this.lastSyncAt = time;
   }
 
 }
