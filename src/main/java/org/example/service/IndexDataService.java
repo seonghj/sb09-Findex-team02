@@ -127,23 +127,25 @@ public class IndexDataService {
 
     Pageable pageable = PageRequest.of(0, size + 1, Sort.by(direction, sortField)); // ⭐ hasNext 판단용 +1
 
+    LocalDate safeStartDate = request.startDate() != null ? request.startDate() : LocalDate.of(2000, 1, 1);
+    LocalDate safeEndDate = request.endDate() != null ? request.endDate() : LocalDate.now().plusDays(1);
+
     List<IndexData> result;
 
+    boolean isAllIndices = (request.indexId() == null);
+
     if (request.idAfter() != null) {
-      result = indexDataRepository.findByIndexInfo_IdAndBaseDateBetweenAndIdGreaterThan(
-          request.indexId(),
-          request.startDate(),
-          request.endDate(),
-          request.idAfter(),
-          pageable
-      );
+      if (isAllIndices) {
+        result = indexDataRepository.findByBaseDateBetweenAndIdGreaterThan(safeStartDate, safeEndDate, request.idAfter(), pageable);
+      } else {
+        result = indexDataRepository.findByIndexInfo_IdAndBaseDateBetweenAndIdGreaterThan(request.indexId(), safeStartDate, safeEndDate, request.idAfter(), pageable);
+      }
     } else {
-      result = indexDataRepository.findByIndexInfo_IdAndBaseDateBetween(
-          request.indexId(),
-          request.startDate(),
-          request.endDate(),
-          pageable
-      );
+      if (isAllIndices) {
+        result = indexDataRepository.findByBaseDateBetween(safeStartDate, safeEndDate, pageable);
+      } else {
+        result = indexDataRepository.findByIndexInfo_IdAndBaseDateBetween(request.indexId(), safeStartDate, safeEndDate, pageable);
+      }
     }
 
     boolean hasNext = result.size() > size;
