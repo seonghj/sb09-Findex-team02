@@ -115,61 +115,44 @@ public class IndexDataService {
 
   //조회
   public CursorPageResponseIndexDataDto<IndexDataDto> search(IndexDataSearchRequest request) {
-
     int size = request.size() == null ? 10 : request.size();
-
     String sortField = request.sortField() == null ? "id" : request.sortField();
+    Sort.Direction direction = (request.sortDirection() != null && request.sortDirection().equalsIgnoreCase("desc"))
+        ? Sort.Direction.DESC
+        : Sort.Direction.ASC;
 
-    Sort.Direction direction =
-        request.sortDirection() != null && request.sortDirection().equalsIgnoreCase("desc")
-            ? Sort.Direction.DESC
-            : Sort.Direction.ASC;
-
-    Pageable pageable = PageRequest.of(0, size + 1, Sort.by(direction, sortField)); // ⭐ hasNext 판단용 +1
+    Pageable pageable = PageRequest.of(0, size + 1, Sort.by(direction, sortField));
 
     LocalDate safeStartDate = request.startDate() != null ? request.startDate() : LocalDate.of(2000, 1, 1);
     LocalDate safeEndDate = request.endDate() != null ? request.endDate() : LocalDate.now().plusDays(1);
 
-    List<IndexData> result;
+    List<IndexData> rawResults = indexDataRepository.findIndexDataByCursor(
+        request.indexId(),
+        safeStartDate,
+        safeEndDate,
+        request.idAfter(),
+        direction.isDescending(),
+        pageable
+    );
 
-    boolean isAllIndices = (request.indexId() == null);
+    boolean hasNext = rawResults.size() > size;
+    List<IndexData> content = hasNext
+        ? rawResults.subList(0, size)
+        : rawResults;
 
-    if (request.idAfter() != null) {
-      if (isAllIndices) {
-        result = indexDataRepository.findByBaseDateBetweenAndIdGreaterThan(safeStartDate, safeEndDate, request.idAfter(), pageable);
-      } else {
-        result = indexDataRepository.findByIndexInfo_IdAndBaseDateBetweenAndIdGreaterThan(request.indexId(), safeStartDate, safeEndDate, request.idAfter(), pageable);
-      }
-    } else {
-      if (isAllIndices) {
-        result = indexDataRepository.findByBaseDateBetween(safeStartDate, safeEndDate, pageable);
-      } else {
-        result = indexDataRepository.findByIndexInfo_IdAndBaseDateBetween(request.indexId(), safeStartDate, safeEndDate, pageable);
-      }
-    }
-
-    boolean hasNext = result.size() > size;
-
-    if (hasNext) {
-      result = result.subList(0, size);
-    }
-
-    List<IndexDataDto> content = result.stream()
+    List<IndexDataDto> contentDtoList = content.stream()
         .map(indexDataMapper::toDto)
         .toList();
 
-    Long nextIdAfter = content.isEmpty()
-        ? null
-        : result.get(result.size() - 1).getId();
-
-    String nextCursor = nextIdAfter == null ? null : String.valueOf(nextIdAfter);
+    Long lastId = content.isEmpty() ? null : content.get(content.size() - 1).getId();
+    String nextCursor = (lastId != null) ? String.valueOf(lastId) : null;
 
     return new CursorPageResponseIndexDataDto<>(
-        content,
+        contentDtoList,
         nextCursor,
-        nextIdAfter,
-        size,
-        0L, // totalElements (cursor 방식에서는 보통 안씀)
+        lastId,
+        contentDtoList.size(),
+        0L,
         hasNext
     );
   }

@@ -77,4 +77,23 @@ public interface IndexDataRepository extends JpaRepository<IndexData, Long> {
   LocalDate baseDate(LocalDate baseDate);
   List<IndexData> findByBaseDateBetweenAndIdGreaterThan(LocalDate startDate, LocalDate endDate, Long idAfter, Pageable pageable);
   List<IndexData> findByBaseDateBetween(LocalDate startDate, LocalDate endDate, Pageable pageable);
+
+
+
+  @Query("SELECT d FROM IndexData d " +
+      "WHERE (:indexId IS NULL OR d.indexInfo.id = :indexId) " +
+      "AND (d.baseDate BETWEEN :startDate AND :endDate) " +
+      "AND (" +
+      "     :idAfter IS NULL " +
+      "     OR (:isDesc = true AND d.id < :idAfter) " +
+      "     OR (:isDesc = false AND d.id > :idAfter)" +
+      ")")
+  List<IndexData> findIndexDataByCursor(
+      @Param("indexId") Long indexId,
+      @Param("startDate") LocalDate startDate,
+      @Param("endDate") LocalDate endDate,
+      @Param("idAfter") Long idAfter,
+      @Param("isDesc") boolean isDesc,
+      Pageable pageable
+  );
 }
