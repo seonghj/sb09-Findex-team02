@@ -2,6 +2,7 @@ package org.example.scheduler.task;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
@@ -32,12 +33,11 @@ public class AutoSyncTask implements BatchTask {
             .map(AutoSyncConfig::getIndexInfo)
                 .toList();
 
-    LocalDate minLastSync = configList.stream().
+    LocalDateTime minLastSync = configList.stream().
         map(AutoSyncConfig::getLastSyncAt)
         .filter(Objects::nonNull)
-        .map(instant -> instant.atZone(ZoneId.systemDefault()).toLocalDate())
-        .min(LocalDate::compareTo)
-        .orElse(LocalDate.now());
+        .min(LocalDateTime::compareTo)
+        .orElse(LocalDateTime.now());
 
     LocalDate startSyncTime = LocalDate.now();
 
@@ -46,7 +46,7 @@ public class AutoSyncTask implements BatchTask {
     List<SyncJobDto> integrationLogList = integrationService.autoSyncIndexData(targetList, configList, minLastSync);
 
     configList.forEach(config->{
-      config.updateLastSyncAt(Instant.now());
+      config.updateLastSyncAt(LocalDateTime.now());
     });
 
     log.info("[지수 데이터 자동 연동 성공] 날짜={}, 개수={}", startSyncTime,  integrationLogList.size());

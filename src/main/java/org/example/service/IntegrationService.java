@@ -156,7 +156,7 @@ public class IntegrationService {
         // 연동 후 자동 연동 설정에 최근 연동 날짜 갱신
         AutoSyncConfig config = configMap.get(indexInfo.getId());
         if (config != null) {
-          config.updateLastSyncAt(Instant.now());
+          config.updateLastSyncAt(LocalDateTime.now());
         }
       } catch (Exception e) {
         log.error("[지수 데이터 연동 실패] indexName = {}, date = {}, error = {}", item.indexName(), item.dataBaseDate(), e.getMessage());
@@ -384,7 +384,7 @@ public class IntegrationService {
   }
 
   @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public List<SyncJobDto> autoSyncIndexData(List<IndexInfo> targetList, List<AutoSyncConfig> configList, LocalDate minLastSyncDate){
+  public List<SyncJobDto> autoSyncIndexData(List<IndexInfo> targetList, List<AutoSyncConfig> configList, LocalDateTime minLastSyncDate){
 
     String startDateStr = minLastSyncDate.format(YYYYMMDD);
     String endDateStr = LocalDate.now().plusDays(1).format(YYYYMMDD);
