@@ -12,6 +12,7 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -43,7 +44,7 @@ public class AutoSyncConfig {
   private Boolean enabled = false;
 
   @Column(name = "last_sync_at")
-  private LocalDateTime lastSyncAt = LocalDateTime.now();
+  private LocalDateTime lastSyncAt = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
 
   public AutoSyncConfig(IndexInfo indexInfo){
     this.indexInfo = indexInfo;

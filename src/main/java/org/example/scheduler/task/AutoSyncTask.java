@@ -46,7 +46,7 @@ public class AutoSyncTask implements BatchTask {
     List<SyncJobDto> integrationLogList = integrationService.autoSyncIndexData(targetList, configList, minLastSync);
 
     configList.forEach(config->{
-      config.updateLastSyncAt(LocalDateTime.now());
+      config.updateLastSyncAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")));
     });
 
     log.info("[지수 데이터 자동 연동 성공] 날짜={}, 개수={}", startSyncTime,  integrationLogList.size());

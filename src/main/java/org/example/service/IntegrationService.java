@@ -160,7 +160,7 @@ public class IntegrationService {
         // 연동 후 자동 연동 설정에 최근 연동 날짜 갱신
         AutoSyncConfig config = configMap.get(indexInfo.getId());
         if (config != null) {
-          config.updateLastSyncAt(LocalDateTime.now());
+          config.updateLastSyncAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")));
         }
       } catch (Exception e) {
         log.error("[지수 데이터 연동 실패] indexName = {}, date = {}, error = {}", item.indexName(), item.dataBaseDate(), e.getMessage());

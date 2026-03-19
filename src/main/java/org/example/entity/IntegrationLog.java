@@ -13,6 +13,7 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import lombok.AccessLevel;
 import lombok.*;
 import org.example.entity.type.JobType;
@@ -92,7 +93,7 @@ public class IntegrationLog {
         .worker(worker)
         .status(StatusType.SUCCESS)
         .result(StatusType.SUCCESS)
-        .workedAt(LocalDateTime.now())
+        .workedAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
         .build();
   }
   public static IntegrationLog createFailed(JobType jobType, IndexInfo indexInfo,IndexData indexData,
@@ -105,7 +106,7 @@ public class IntegrationLog {
         .worker(worker)
         .status(StatusType.FAILED)
         .result(StatusType.FAILED)
-        .workedAt(LocalDateTime.now())
+        .workedAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
         .build();
   }
 
