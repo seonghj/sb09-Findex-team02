@@ -91,3 +91,6 @@ tasks.named('bootJar') {
 jar {
     enabled = false
 }
+tasks.named('bootRun') {
+    systemProperty 'java.net.preferIPv4Stack', 'true'
+}
