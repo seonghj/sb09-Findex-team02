@@ -5,10 +5,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "지수 정보 목록 조회 요청")
 public record IndexInfoSearchRequest(
 
-        @Schema(description = "지수 분류명(부분 일치)", example = "KOSPI")
+        @Schema(description = "지수 분류명", example = "KOSPI")
         String indexClassification,
 
-        @Schema(description = "지수명(부분 일치)", example = "IT")
+        @Schema(description = "지수명", example = "IT")
         String indexName,
 
         @Schema(description = "즐겨찾기 여부(완전 일치)", example = "true")

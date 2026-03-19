@@ -83,9 +83,11 @@ public class IndexDataController {
   @Operation(summary = "관심 지수 성과 조회", description = "즐겨찾기한 지수들의 기간별 성과를 요약하여 조회합니다.")
   @GetMapping("/performance/favorite")
   public ResponseEntity<List<FavoritePerformanceResponse>> getFavoriteIndexRankings(
-      @Schema(allowableValues = {"DAILY", "WEEKLY", "MONTHLY"})
+      @Schema(allowableValues = {"DAILY", "WEEKLY", "MONTHLY"},
+          description = "성과 기간 유형 (DAILY, WEEKLY, MONTHLY)\n"
+              + "\n" + "Default value : DAILY")
       @RequestParam String periodType
-  ){
+  ) {
     return ResponseEntity.ok(indexDataService.getFavoritePerformances(periodType));
   }
 
@@ -107,13 +109,18 @@ public class IndexDataController {
   @Operation(summary = "지수 성과 랭킹 조회", description = "지수의 성과 분석 랭킹을 조회합니다.")
   @GetMapping("/performance/rank")
   public ResponseEntity<List<RankedIndexPerformanceDto>> getRankingPerformance(
+      @Schema(description = "지수 정보")
       @RequestParam(required = false) Long indexInfoId,
       @RequestParam(required = false) String indexName,
-      @Schema(allowableValues = {"DAILY", "WEEKLY", "MONTHLY"})
+      @Schema(allowableValues = {"DAILY", "WEEKLY", "MONTHLY"},
+          description = "성과 기간 유형 (DAILY, WEEKLY, MONTHLY)\n"
+              + "\n" + "Default value : DAILY")
       @RequestParam(defaultValue = "DAILY") String periodType,
+      @Schema(description = "최대 랭킹 수")
       @RequestParam(defaultValue = "10") Integer rankLimit
-  ){
-    List<RankedIndexPerformanceDto> result = indexDataService.getPerformanceRanking(indexInfoId, indexName, periodType, rankLimit);
+  ) {
+    List<RankedIndexPerformanceDto> result = indexDataService.getPerformanceRanking(indexInfoId,
+        indexName, periodType, rankLimit);
     return ResponseEntity.ok(result);
   }
 
@@ -121,12 +128,16 @@ public class IndexDataController {
   @Operation(summary = "지수 차트 조회", description = "지수 차트 데이터를 조회합니다.")
   @GetMapping("/chart")
   public ResponseEntity<List<IndexChartDto>> getIndexChart(
-    @RequestParam(required = false) Long indexChartId,
-    @RequestParam(required = false) String indexName,
-    @Schema(allowableValues = {"MONTHLY", "QUARTERLY", "YEARLY"})
-    @RequestParam(defaultValue = "MONTHLY") String periodType
-  ){
-    List<IndexChartDto> indexCharList = indexDataService.getIndexChart(indexChartId, indexName, periodType);
+      @Schema(description = "지수 정보 ID")
+      @RequestParam(required = false) Long indexChartId,
+      @RequestParam(required = false) String indexName,
+      @Schema(allowableValues = {"MONTHLY", "QUARTERLY", "YEARLY"},
+          description = "성과 기간 유형 (DAILY, WEEKLY, MONTHLY)\n"
+              + "\n" + "Default value : DAILY"  )
+      @RequestParam(defaultValue = "MONTHLY") String periodType
+  ) {
+    List<IndexChartDto> indexCharList = indexDataService.getIndexChart(indexChartId, indexName,
+        periodType);
     return ResponseEntity.ok(indexCharList);
   }
 }

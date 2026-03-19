@@ -1,6 +1,7 @@
 package org.example.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.example.dto.request.IndexInfoCreateRequest;
@@ -14,7 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "지수 정보")
+@Tag(name = "지수 정보 API")
 @RestController
 @RequestMapping("/api/index-infos")
 @RequiredArgsConstructor
@@ -25,7 +26,7 @@ public class IndexInfoController {
     /**
      * 지수 정보 등록
      */
-    @Operation(summary = "지수 정보 등록")
+    @Operation(summary = "지수 정보 등록" , description = "새로운 지수 정보를 등록합니다.")
     @PostMapping
     public ResponseEntity<IndexInfoResponseDto> createIndexInfo(
             @RequestBody IndexInfoCreateRequest request
@@ -37,12 +38,7 @@ public class IndexInfoController {
     /**
      * 지수 정보 목록 조회
      */
-    @Operation(
-            summary = "지수 정보 목록 조회",
-            description = "지수 분류명, 지수명, 즐겨찾기 조건으로 지수 정보 목록을 조회합니다. "
-                    + "지수 분류명과 지수명은 부분 일치 검색을 지원하며, "
-                    + "정렬 및 cursor 기반 페이지네이션을 지원합니다."
-    )
+    @Operation(summary = "지수 정보 목록 조회", description = "지수 정보 목록을 조회합니다. 필터링, 정렬, 커서 기반 페이지네이션을 지원합니다.")
     @GetMapping
     public ResponseEntity<CursorPageResponseIndexInfoDto<IndexInfoResponseDto>> findIndexInfosByCursor(
             @ParameterObject IndexInfoSearchRequest request
@@ -53,11 +49,12 @@ public class IndexInfoController {
     /**
      * 지수 정보 수정
      */
-    @Operation(summary = "지수 정보 수정")
+    @Operation(summary = "지수 정보 수정", description = "기존 지수 정보를 수정합니다.")
     @PatchMapping("/{id}")
     public ResponseEntity<IndexInfoResponseDto> updateIndexInfo(
-            @PathVariable Long id,
-            @RequestBody IndexInfoUpdateRequest request
+        @Schema(description = "지수 정보 ID")
+        @PathVariable Long id,
+        @RequestBody IndexInfoUpdateRequest request
     ) {
         IndexInfoResponseDto response = indexInfoService.updateIndexInfo(id, request);
         return ResponseEntity.ok(response);
@@ -67,9 +64,11 @@ public class IndexInfoController {
      * 지수 정보 삭제
      * IndexInfo 삭제 시 연관된 IndexData도 함께 삭제됨
      */
-    @Operation(summary = "지수 정보 삭제")
+    @Operation(summary = "지수 정보 삭제", description = "지수 정보를 삭제합니다. 관련된 지수 데이터도 함께 삭제됩니다.")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteIndexInfo(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteIndexInfo(
+        @Schema(description = "지수 정보 ID")
+        @PathVariable Long id) {
         indexInfoService.deleteIndexInfo(id);
         return ResponseEntity.noContent().build();
     }
