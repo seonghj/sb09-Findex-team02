@@ -1,5 +1,7 @@
 package org.example.controller;
 
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import java.io.ByteArrayInputStream;
 import java.time.Instant;
 
@@ -44,13 +46,27 @@ public class IndexDataController {
 
   // 생성 (POST)
   @Operation(summary = "지수 데이터 등록", description = "새로운 지수 데이터를 등록합니다.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "201", description = "지수 데이터 생성 성공"),
+      @ApiResponse(responseCode = "400", description = "잘못된 요청 (유효하지 않은 데이터 값 등)"),
+      @ApiResponse(responseCode = "404", description = "참조하는 지수 정보를 찾을 수 없음"),
+      @ApiResponse(responseCode = "500", description = "서버 오류")
+  })
   @PostMapping
   public Long create(@RequestBody IndexDataCreateRequest request) {
+
+
     return indexDataService.create(request);
+
   }
 
   // 목록 조회 (GET)
   @Operation(summary = "지수 데이터 목록 조회", description = "지수 데이터 목록을 조회합니다. 필터링, 정렬, 커서 기반 페이지네이션을 지원합니다.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "지수 데이터 목록 조회 성공"),
+      @ApiResponse(responseCode = "400", description = "잘못된 요청 (유효하지 않은 데이터 값 등)"),
+      @ApiResponse(responseCode = "500", description = "서버 오류")
+  })
   @GetMapping
   public CursorPageResponseIndexDataDto<IndexDataDto> search(
       @ModelAttribute IndexDataSearchRequest request
@@ -60,10 +76,16 @@ public class IndexDataController {
 
   // 수정 (PATCH)
   @Operation(summary = "지수 데이터 수정", description = "기존 지수 데이터를 수정합니다.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "지수 데이터 수정 성공"),
+      @ApiResponse(responseCode = "400", description = "잘못된 요청 (유효하지 않은 데이터 값 등)"),
+      @ApiResponse(responseCode = "404", description = "수정할 지수 데이터를 찾을 수 없음"),
+      @ApiResponse(responseCode = "500", description = "서버 오류")
+  })
   @PatchMapping("/{id}")
   public Long update(
       @PathVariable Long id,
-      @PathVariable LocalDate baseDate,
+      @RequestBody LocalDate baseDate,
       @RequestBody IndexDataUpdateRequest request
   ) {
     return indexDataService.update(id, baseDate, request);
@@ -71,10 +93,15 @@ public class IndexDataController {
 
   // 삭제 (DELETE)
   @Operation(summary = "지수 데이터 삭제", description = "지수 데이터를 삭제합니다.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "204", description = "지수 데이터 삭제 성공"),
+      @ApiResponse(responseCode = "404", description = "삭제할 지수 데이터를 찾을 수 없음"),
+      @ApiResponse(responseCode = "500", description = "서버 오류")
+  })
   @DeleteMapping("/{id}")
   public void delete(
       @PathVariable Long id,
-      @PathVariable LocalDate baseDate
+      @RequestBody LocalDate baseDate
   ) {
     indexDataService.delete(id, baseDate);
   }
