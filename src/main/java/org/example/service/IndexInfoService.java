@@ -9,6 +9,7 @@ import org.example.dto.request.IndexInfoSearchRequest;
 import org.example.dto.request.IndexInfoUpdateRequest;
 import org.example.dto.response.CursorPageResponseIndexInfoDto;
 import org.example.dto.response.IndexInfoResponseDto;
+import org.example.dto.response.IndexInfoSummaryDto;
 import org.example.entity.IndexInfo;
 import org.example.repository.IndexInfoRepository;
 import org.springframework.stereotype.Service;
@@ -54,6 +55,25 @@ public class IndexInfoService {
         autoSyncConfigService.create(savedIndexInfo.getId());
 
         return IndexInfoResponseDto.from(savedIndexInfo);
+    }
+
+    @Transactional(readOnly = true)
+    public IndexInfoResponseDto findIndexInfoById(Long id) {
+        IndexInfo indexInfo = indexInfoRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("해당 지수 정보를 찾을 수 없습니다. id=" + id));
+
+        return IndexInfoResponseDto.from(indexInfo);
+    }
+
+    @Transactional(readOnly = true)
+    public List<IndexInfoSummaryDto> findIndexInfoSummaries() {
+        return indexInfoRepository.findAll().stream()
+                .map(indexInfo -> new IndexInfoSummaryDto(
+                        indexInfo.getId(),
+                        indexInfo.getCategoryName(),
+                        indexInfo.getIndexName()
+                ))
+                .toList();
     }
 
     @Transactional

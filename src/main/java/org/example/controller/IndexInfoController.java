@@ -2,12 +2,14 @@ package org.example.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.example.dto.request.IndexInfoCreateRequest;
 import org.example.dto.request.IndexInfoSearchRequest;
 import org.example.dto.request.IndexInfoUpdateRequest;
 import org.example.dto.response.CursorPageResponseIndexInfoDto;
 import org.example.dto.response.IndexInfoResponseDto;
+import org.example.dto.response.IndexInfoSummaryDto;
 import org.example.service.IndexInfoService;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpStatus;
@@ -32,6 +34,24 @@ public class IndexInfoController {
     ) {
         IndexInfoResponseDto response = indexInfoService.createIndexInfo(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /**
+     * 지수 정보 단건 조회
+     */
+    @Operation(summary = "지수 정보 조회")
+    @GetMapping("/{id}")
+    public ResponseEntity<IndexInfoResponseDto> findIndexInfoById(@PathVariable Long id) {
+        return ResponseEntity.ok(indexInfoService.findIndexInfoById(id));
+    }
+
+    /**
+     * 지수 정보 요약 목록 조회
+     */
+    @Operation(summary = "지수 정보 요약 목록 조회")
+    @GetMapping("/summaries")
+    public ResponseEntity<List<IndexInfoSummaryDto>> findIndexInfoSummaries() {
+        return ResponseEntity.ok(indexInfoService.findIndexInfoSummaries());
     }
 
     /**
