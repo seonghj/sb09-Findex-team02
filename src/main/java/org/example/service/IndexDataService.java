@@ -117,8 +117,7 @@ public class IndexDataService {
   public CursorPageResponseIndexDataDto<IndexDataDto> search(IndexDataSearchRequest request) {
     int size = request.size() == null ? 10 : request.size();
     String sortField = request.sortField() == null ? "id" : request.sortField();
-
-    boolean isDesc = request.sortDirection() != null && request.sortDirection().equalsIgnoreCase("desc");
+    boolean isDesc = "desc".equalsIgnoreCase(request.sortDirection());
     Sort.Direction direction = isDesc ? Sort.Direction.DESC : Sort.Direction.ASC;
 
     Sort sort = Sort.by(direction, sortField).and(Sort.by(direction, "id"));
@@ -127,7 +126,6 @@ public class IndexDataService {
     LocalDate safeStartDate = request.startDate() != null ? request.startDate() : LocalDate.of(2000, 1, 1);
     LocalDate safeEndDate = request.endDate() != null ? request.endDate() : LocalDate.now();
 
-    // 3. 데이터 조회
     List<IndexData> rawResults = indexDataRepository.findIndexDataByCursor(
         request.indexInfoId(),
         safeStartDate,
@@ -145,16 +143,11 @@ public class IndexDataService {
         .toList();
 
     Long lastId = content.isEmpty() ? null : content.get(content.size() - 1).getId();
-    String nextCursor = (lastId != null) ? String.valueOf(lastId) : null;
+    String nextCursor = (hasNext && lastId != null) ? String.valueOf(lastId) : null;
 
-    long totalElements = 0L;
-    if (request.idAfter() == null) {
-      totalElements = indexDataRepository.countIndexDataByCursor(
-          request.indexInfoId(),
-          safeStartDate,
-          safeEndDate
-      );
-    }
+    long totalElements = indexDataRepository.countIndexDataByCursor(
+        request.indexInfoId(), safeStartDate, safeEndDate
+    );
 
     return new CursorPageResponseIndexDataDto<>(
         contentDtoList,
