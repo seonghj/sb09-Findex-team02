@@ -481,6 +481,10 @@ public class IndexDataService {
             }
           }
 
+          Collections.reverse(basicPoints);
+          Collections.reverse(ma5Points);
+          Collections.reverse(ma20Points);
+
           return new IndexChartDto(
               info.getId(),
               info.getCategoryName(),

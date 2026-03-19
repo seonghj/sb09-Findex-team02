@@ -153,17 +153,17 @@ public class IndexDataController {
 
 
   @Operation(summary = "지수 차트 조회", description = "지수 차트 데이터를 조회합니다.")
-  @GetMapping("/chart")
+  @GetMapping("{id}/chart")
   public ResponseEntity<List<IndexChartDto>> getIndexChart(
       @Schema(description = "지수 정보 ID")
-      @RequestParam(required = false) Long indexChartId,
+      @PathVariable(required = false) Long id,
       @RequestParam(required = false) String indexName,
       @Schema(allowableValues = {"MONTHLY", "QUARTERLY", "YEARLY"},
           description = "성과 기간 유형 (DAILY, WEEKLY, MONTHLY)\n"
               + "\n" + "Default value : DAILY"  )
       @RequestParam(defaultValue = "MONTHLY") String periodType
   ) {
-    List<IndexChartDto> indexCharList = indexDataService.getIndexChart(indexChartId, indexName,
+    List<IndexChartDto> indexCharList = indexDataService.getIndexChart(id, indexName,
         periodType);
     return ResponseEntity.ok(indexCharList);
   }
