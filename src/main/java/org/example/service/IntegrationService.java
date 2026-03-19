@@ -107,7 +107,7 @@ public class IntegrationService {
             IntegrationLog.createSuccess(JobType.INDEX_INFO, existing, LocalDate.now(), worker));
       } catch (Exception e) {
         log.error("[지수 정보 연동 실패] indexName = {}, errer = {}", item.indexName(),e.getMessage() );
-        logList.add(IntegrationLog.createFailed(JobType.INDEX_INFO, null, LocalDate.now(), worker));
+        logList.add(IntegrationLog.createFailed(JobType.INDEX_INFO, null, null,LocalDate.now(), worker));
       }
       }
     indexInfoRepository.saveAll(newIndexInfoList);
@@ -145,13 +145,17 @@ public class IntegrationService {
         IndexData existing = Optional.ofNullable(existingDataMap.get(item.indexName()))
             .map(dateMap -> dateMap.get(dataDate)).orElse(null);
 
+        IndexData targetData;
         if (existing != null) {
           existing.updateFromApi(toIndexDataUpdateRequest(item));
+          targetData = existing;
         } else {
-          newIndexDataList.add(getIndexData(item, indexInfo, dataDate));
+          IndexData newData = getIndexData(item, indexInfo, dataDate);
+          newIndexDataList.add(newData);
+          targetData = newData;
         }
         logList.add(
-            IntegrationLog.createSuccess(JobType.INDEX_DATA, indexInfo, LocalDate.now(), worker));
+            IntegrationLog.createSuccess(JobType.INDEX_DATA, indexInfo, targetData, LocalDate.now(), worker));
 
         // 연동 후 자동 연동 설정에 최근 연동 날짜 갱신
         AutoSyncConfig config = configMap.get(indexInfo.getId());
@@ -160,7 +164,7 @@ public class IntegrationService {
         }
       } catch (Exception e) {
         log.error("[지수 데이터 연동 실패] indexName = {}, date = {}, error = {}", item.indexName(), item.dataBaseDate(), e.getMessage());
-        logList.add(IntegrationLog.createFailed(JobType.INDEX_DATA, indexInfo, LocalDate.now(), worker));
+        logList.add(IntegrationLog.createFailed(JobType.INDEX_DATA, indexInfo, null, LocalDate.now(), worker));
       }
     }
       indexDataRepository.saveAll(newIndexDataList);
@@ -448,12 +452,12 @@ public class IntegrationService {
       IndexData newIndexData = getIndexData(item, indexInfo, dataDate);
       outputIndexDataList.add(newIndexData);
       log.info("[지수 데이터 자동 등록 성공] 이름={}, 날짜={}", item.indexName(), dataDate);
-      return IntegrationLog.createSuccess(JobType.INDEX_DATA, indexInfo, LocalDate.now(), "system");
+      return IntegrationLog.createSuccess(JobType.INDEX_DATA, indexInfo, newIndexData, LocalDate.now(), "system");
 
     } catch (Exception e) {
       log.error("[지수 데이터 자동 연동 에러] indexName={}, date={}, error={}",
           item.indexName(), dataDate, e.getMessage());
-      return IntegrationLog.createFailed(JobType.INDEX_DATA, indexInfo, LocalDate.now(), "system");
+      return IntegrationLog.createFailed(JobType.INDEX_DATA, indexInfo,null, LocalDate.now(), "system");
     }
   }
 }

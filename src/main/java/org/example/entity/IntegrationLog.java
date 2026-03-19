@@ -82,11 +82,12 @@ public class IntegrationLog {
     this.worker = worker;
     this.workedAt = workedAt;
   }
-  public static IntegrationLog createSuccess(JobType jobType, IndexInfo indexInfo,
+  public static IntegrationLog createSuccess(JobType jobType, IndexInfo indexInfo,IndexData indexData,
       LocalDate targetDate, String worker) {
     return IntegrationLog.builder()
         .jobType(jobType)
         .indexInfo(indexInfo)
+        .indexData(indexData)
         .targetDate(targetDate)
         .worker(worker)
         .status(StatusType.SUCCESS)
@@ -94,11 +95,12 @@ public class IntegrationLog {
         .workedAt(LocalDateTime.now())
         .build();
   }
-  public static IntegrationLog createFailed(JobType jobType, IndexInfo indexInfo,
+  public static IntegrationLog createFailed(JobType jobType, IndexInfo indexInfo,IndexData indexData,
       LocalDate targetDate, String worker) {
     return IntegrationLog.builder()
         .jobType(jobType)
         .indexInfo(indexInfo)
+        .indexData(indexData)
         .targetDate(targetDate)
         .worker(worker)
         .status(StatusType.FAILED)
