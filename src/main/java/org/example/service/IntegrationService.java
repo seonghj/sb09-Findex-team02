@@ -104,7 +104,7 @@ public class IntegrationService {
           indexInfoMap.put(targetKey, newIndex);
         }
         logList.add(
-            IntegrationLog.createSuccess(JobType.INDEX_INFO, existing, LocalDate.now(), worker));
+            IntegrationLog.createSuccess(JobType.INDEX_INFO, existing, null, LocalDate.now(), worker));
       } catch (Exception e) {
         log.error("[지수 정보 연동 실패] indexName = {}, errer = {}", item.indexName(),e.getMessage() );
         logList.add(IntegrationLog.createFailed(JobType.INDEX_INFO, null, null,LocalDate.now(), worker));
