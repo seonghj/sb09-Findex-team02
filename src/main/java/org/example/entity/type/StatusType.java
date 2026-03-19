@@ -1,5 +1,5 @@
 package org.example.entity.type;
 
 public enum StatusType {
-  SUCCESS, FAIL
+  SUCCESS, FAILED
 }

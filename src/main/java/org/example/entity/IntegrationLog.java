@@ -14,7 +14,6 @@ import jakarta.persistence.Table;
 import java.time.LocalDate;
 import lombok.AccessLevel;
 import lombok.*;
-import org.example.entity.base.BaseEntity;
 import org.example.entity.type.JobType;
 import org.example.entity.type.StatusType;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -91,6 +90,7 @@ public class IntegrationLog {
         .worker(worker)
         .status(StatusType.SUCCESS)
         .result(StatusType.SUCCESS)
+        .workedAt(LocalDate.now())
         .build();
   }
   public static IntegrationLog createFailed(JobType jobType, IndexInfo indexInfo,
@@ -100,8 +100,9 @@ public class IntegrationLog {
         .indexInfo(indexInfo)
         .targetDate(targetDate)
         .worker(worker)
-        .status(StatusType.FAIL)
-        .result(StatusType.FAIL)
+        .status(StatusType.FAILED)
+        .result(StatusType.FAILED)
+        .workedAt(LocalDate.now())
         .build();
   }
 
