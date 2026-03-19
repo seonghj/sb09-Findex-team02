@@ -171,18 +171,13 @@ public class IndexDataService {
         hasNext
     );
   }
-  //업데이트
+  //업데이트 (데이터 id를 통해 수정 여부 판단)
   @Transactional
-  public Long update(Long indexId, IndexDataUpdateRequest request) {
+  public Long update(Long indexDataId, IndexDataUpdateRequest request) {
 
-    IndexInfo indexInfo = indexInfoRepository.findById(indexId)
-        .orElseThrow(() -> new NoSuchElementException("Index not found"));
+    IndexData indexData = indexDataRepository.findById(indexDataId)
+        .orElseThrow(() -> new NoSuchElementException("해당 ID의 지수 데이터가 없습니다."));
 
-    IndexData indexData = indexDataRepository
-        .findByIndexInfo(indexInfo)
-        .stream()
-        .findFirst() // 리스트의 첫 번째 요소를 Optional로 변환
-        .orElseThrow(() -> new NoSuchElementException("Index data not found"));
 
     indexData.setPrices(
         request.marketPrice(),
