@@ -68,13 +68,11 @@ public class IndexDataService {
 
     LocalDate baseDate = request.baseDate();
 
-    // 중복 체크 (indexInfo + baseDate)
-    indexDataRepository
-        .findByIndexInfo(indexInfo)
+    // 중복 체크 (indexInfo로 체크)
+    indexDataRepository.findByIndexInfoAndBaseDate(indexInfo, baseDate)
         .ifPresent(data -> {
-          throw new IllegalArgumentException("이미 존재하는 지수 데이터입니다.");
+          throw new IllegalArgumentException("해당 날짜에 이미 존재하는 지수 데이터입니다.");
         });
-
     // 엔티티 생성
     IndexData indexData = getIndexData(request, indexInfo, baseDate);
 
@@ -182,6 +180,8 @@ public class IndexDataService {
 
     IndexData indexData = indexDataRepository
         .findByIndexInfo(indexInfo)
+        .stream()
+        .findFirst() // 리스트의 첫 번째 요소를 Optional로 변환
         .orElseThrow(() -> new NoSuchElementException("Index data not found"));
 
     indexData.setPrices(
@@ -209,14 +209,10 @@ public class IndexDataService {
   @Transactional
   public void delete(Long indexId) {
 
-    IndexInfo indexInfo = indexInfoRepository.findById(indexId)
-        .orElseThrow(() -> new NoSuchElementException("Index not found"));
-
-    IndexData indexData = indexDataRepository
-        .findByIndexInfo(indexInfo)
-        .orElseThrow(() -> new NoSuchElementException("Index data not found"));
-
-    indexDataRepository.delete(indexData);
+    if (!indexDataRepository.existsById(indexId)) {
+      throw new NoSuchElementException("해당 ID의 데이터가 존재하지 않습니다.");
+    }
+    indexDataRepository.deleteById(indexId);
   }
 
   //csv파일로 export

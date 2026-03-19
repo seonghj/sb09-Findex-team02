@@ -15,22 +15,9 @@ import org.springframework.data.repository.query.Param;
 
 public interface IndexDataRepository extends JpaRepository<IndexData, Long> {
 
+  Optional<IndexData> findByIndexInfoAndBaseDate(IndexInfo indexInfo, LocalDate baseDate);
 
-  List<IndexData> findByIndexInfo_IdAndBaseDateBetween(
-      Long indexId,
-      LocalDate startDate,
-      LocalDate endDate
-  );
-  Optional<IndexData> findByIndexInfo(IndexInfo indexInfo);
-
-
-  List<IndexData> findByIndexInfoAndBaseDateBetween(
-      IndexInfo indexInfo,
-      LocalDate startDate,
-      LocalDate endDate,
-      Pageable pageable
-  );
-
+  List<IndexData> findByIndexInfo(IndexInfo indexInfo);
 
   @Query("SELECT i FROM IndexData i " +
       "WHERE i.indexInfo.id IN :ids " +
