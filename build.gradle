@@ -20,8 +20,18 @@ configurations {
     }
 }
 
+tasks.named('bootJar') {
+    archiveFileName = 'app.jar'
+    destinationDirectory = layout.buildDirectory.dir('libs')
+}
+
 jar {
     enabled = false
+}
+
+tasks.named('bootJar') {
+    archiveFileName = 'app.jar'
+    destinationDirectory = file("$buildDir/libs") // 경로 명시
 }
 
 bootJar {
