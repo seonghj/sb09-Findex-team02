@@ -76,7 +76,7 @@ public class IntegrationService {
       return Collections.emptyList();
     }
     Map<String, IndexInfo> indexInfoMap = indexInfoRepository.findAll().stream()
-        .collect(Collectors.toMap(IndexInfo::getIndexName, i -> i));
+        .collect(Collectors.toMap(IndexInfo::getIndexName, i -> i, (existing, replacement) -> existing));
 
     List<IndexInfo> newIndexInfoList = new ArrayList<>();
     List<IntegrationLog> logList = new ArrayList<>();
