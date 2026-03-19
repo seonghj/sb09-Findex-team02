@@ -87,8 +87,6 @@ public class IntegrationService {
         IndexInfo existing = indexInfoMap.get(item.indexName());
         if (existing != null) {
           existing.updateFromApi(toIndexInfoUpdateRequest(item));
-          logList.add(
-              IntegrationLog.createSuccess(JobType.INDEX_INFO, existing, LocalDate.now(), worker));
         } else {
           IndexInfoCreateRequest createReq = toIndexInfoCreateRequest(item);
           IndexInfo newIndex = new IndexInfo(createReq.indexName(), createReq.indexName(),
@@ -98,9 +96,9 @@ public class IntegrationService {
 
           newIndexInfoList.add(newIndex);
           autoSyncConfigList.add(new AutoSyncConfig(newIndex));
-          logList.add(
-              IntegrationLog.createSuccess(JobType.INDEX_INFO, newIndex, LocalDate.now(), worker));
         }
+        logList.add(
+            IntegrationLog.createSuccess(JobType.INDEX_INFO, existing, LocalDate.now(), worker));
       } catch (Exception e) {
         log.error("[지수 정보 연동 실패] indexName = {}, errer = {}", item.indexName(),e.getMessage() );
         logList.add(IntegrationLog.createFailed(JobType.INDEX_INFO, null, LocalDate.now(), worker));
