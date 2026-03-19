@@ -21,7 +21,7 @@ public interface IndexDataRepository extends JpaRepository<IndexData, Long> {
       LocalDate startDate,
       LocalDate endDate
   );
-  Optional<IndexData> findByIndexInfoAndBaseDate(IndexInfo indexId, LocalDate baseDate);
+  Optional<IndexData> findByIndexInfo(IndexInfo indexInfo);
 
 
   List<IndexData> findByIndexInfoAndBaseDateBetween(
@@ -87,4 +87,5 @@ public interface IndexDataRepository extends JpaRepository<IndexData, Long> {
       Sort sort
   );
 
+  LocalDate baseDate(LocalDate baseDate);
 }

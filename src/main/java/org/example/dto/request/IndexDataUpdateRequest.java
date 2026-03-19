@@ -2,6 +2,7 @@ package org.example.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Schema(description = "지수 데이터 수정 요청")
 public record IndexDataUpdateRequest(

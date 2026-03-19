@@ -70,7 +70,7 @@ public class IndexDataService {
 
     // 중복 체크 (indexInfo + baseDate)
     indexDataRepository
-        .findByIndexInfoAndBaseDate(indexInfo, baseDate)
+        .findByIndexInfo(indexInfo)
         .ifPresent(data -> {
           throw new IllegalArgumentException("이미 존재하는 지수 데이터입니다.");
         });
@@ -175,13 +175,13 @@ public class IndexDataService {
   }
   //업데이트
   @Transactional
-  public Long update(Long indexId, LocalDate baseDate, IndexDataUpdateRequest request) {
+  public Long update(Long indexId, IndexDataUpdateRequest request) {
 
     IndexInfo indexInfo = indexInfoRepository.findById(indexId)
         .orElseThrow(() -> new NoSuchElementException("Index not found"));
 
     IndexData indexData = indexDataRepository
-        .findByIndexInfoAndBaseDate(indexInfo, baseDate)
+        .findByIndexInfo(indexInfo)
         .orElseThrow(() -> new NoSuchElementException("Index data not found"));
 
     indexData.setPrices(
@@ -207,13 +207,13 @@ public class IndexDataService {
 
   //삭제
   @Transactional
-  public void delete(Long indexId, LocalDate baseDate) {
+  public void delete(Long indexId) {
 
     IndexInfo indexInfo = indexInfoRepository.findById(indexId)
         .orElseThrow(() -> new NoSuchElementException("Index not found"));
 
     IndexData indexData = indexDataRepository
-        .findByIndexInfoAndBaseDate(indexInfo, baseDate)
+        .findByIndexInfo(indexInfo)
         .orElseThrow(() -> new NoSuchElementException("Index data not found"));
 
     indexDataRepository.delete(indexData);

@@ -3,6 +3,7 @@ package org.example.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 public record OpenApiStockResponseDto(Response response) {
@@ -24,7 +25,7 @@ public record OpenApiStockResponseDto(Response response) {
       @JsonProperty("basPntm") String infoBaseDate,           // 기준 시점
       @JsonProperty("basIdx") BigDecimal baseIndex,               // 기준 지수
 
-      @JsonProperty("basDt") String dataBaseDate,             // 기준 일자
+      @JsonProperty("basDt") String  dataBaseDate,             // 기준 일자
       @JsonProperty("mkp") BigDecimal openPrice,                  // 시가
       @JsonProperty("clpr") BigDecimal closePrice,                // 종가
       @JsonProperty("hipr") BigDecimal highPrice,                 // 고가

@@ -34,7 +34,6 @@ import org.example.repository.IntegrationLogRepository;
 import org.example.repository.SyncJobSpec;
 import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
@@ -81,27 +80,18 @@ public class IntegrationService {
     List<AutoSyncConfig> autoSyncConfigList = new ArrayList<>();
 
     for (Item item : fetchedItems) {
-      try {
-        IndexInfo existing = indexInfoMap.get(item.indexName());
-        if (existing != null) {
-          existing.updateFromApi(toIndexInfoUpdateRequest(item));
-          logList.add(
-              IntegrationLog.createSuccess(JobType.INDEX_INFO, existing, LocalDate.now(), worker));
-        } else {
-          IndexInfoCreateRequest createReq = toIndexInfoCreateRequest(item);
-          IndexInfo newIndex = new IndexInfo(createReq.indexName(), createReq.indexName(),
-              SourceType.OPEN_API);
-          newIndex.setIndexDetails(createReq.basePointInTime(), createReq.baseIndex(),
-              createReq.employedItemsCount());
+      IndexInfo existing = indexInfoMap.get(item.indexName());
+      if (existing != null) {
+        existing.updateFromApi(toIndexInfoUpdateRequest(item));
+        logList.add(IntegrationLog.createSuccess(JobType.INDEX_INFO, existing, LocalDate.now(), worker));
+      } else {
+        IndexInfoCreateRequest createReq = toIndexInfoCreateRequest(item);
+        IndexInfo newIndex = new IndexInfo(createReq.indexName(), createReq.indexName(), SourceType.OPEN_API);
+        newIndex.setIndexDetails(createReq.basePointInTime(), createReq.baseIndex(), createReq.employedItemsCount());
 
-          newIndexInfoList.add(newIndex);
-          autoSyncConfigList.add(new AutoSyncConfig(newIndex));
-          logList.add(
-              IntegrationLog.createSuccess(JobType.INDEX_INFO, newIndex, LocalDate.now(), worker));
-        }
-      } catch (Exception e) {
-        log.error("[지수 정보 연동 실패] indexName = {}, errer = {}", item.indexName(),e.getMessage() );
-        logList.add(IntegrationLog.createFailed(JobType.INDEX_INFO, null, LocalDate.now(), worker));
+        newIndexInfoList.add(newIndex);
+        autoSyncConfigList.add(new AutoSyncConfig(newIndex));
+        logList.add(IntegrationLog.createSuccess(JobType.INDEX_INFO, newIndex, LocalDate.now(), worker));
       }
       }
     indexInfoRepository.saveAll(newIndexInfoList);
@@ -134,27 +124,22 @@ public class IntegrationService {
       IndexInfo indexInfo = indexInfoMap.get(item.indexName());
       if (indexInfo == null)
         continue;
-      try {
-        LocalDate dataDate = parseLocalDate(item.dataBaseDate());
-        IndexData existing = Optional.ofNullable(existingDataMap.get(item.indexName()))
-            .map(dateMap -> dateMap.get(dataDate)).orElse(null);
+      LocalDate dataDate = parseLocalDate(item.dataBaseDate());
+      IndexData existing = Optional.ofNullable(existingDataMap.get(item.indexName()))
+          .map(dateMap -> dateMap.get(dataDate)).orElse(null);
 
-        if (existing != null) {
-          existing.updateFromApi(toIndexDataUpdateRequest(item));
-        } else {
-          newIndexDataList.add(getIndexData(item, indexInfo, dataDate));
-        }
-        logList.add(
-            IntegrationLog.createSuccess(JobType.INDEX_DATA, indexInfo, LocalDate.now(), worker));
+      if (existing != null) {
+        existing.updateFromApi(toIndexDataUpdateRequest(item));
+      } else {
+        newIndexDataList.add(getIndexData(item, indexInfo, dataDate));
+      }
+      logList.add(
+          IntegrationLog.createSuccess(JobType.INDEX_DATA, indexInfo, LocalDate.now(), worker));
 
-        // 연동 후 자동 연동 설정에 최근 연동 날짜 갱신
-        AutoSyncConfig config = configMap.get(indexInfo.getId());
-        if (config != null) {
-          config.updateLastSyncAt(LocalDate.now());
-        }
-      } catch (Exception e) {
-        log.error("[지수 데이터 연동 실패] indexName = {}, date = {}, error = {}", item.indexName(), item.dataBaseDate(), e.getMessage());
-        logList.add(IntegrationLog.createFailed(JobType.INDEX_DATA, indexInfo, LocalDate.now(), worker));
+      // 연동 후 자동 연동 설정에 최근 연동 날짜 갱신
+      AutoSyncConfig config = configMap.get(indexInfo.getId());
+      if (config != null) {
+        config.updateLastSyncAt(LocalDate.now());
       }
     }
       indexDataRepository.saveAll(newIndexDataList);
@@ -372,26 +357,32 @@ public class IntegrationService {
   }
 
   @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public List<SyncJobDto> autoSyncIndexData(List<IndexInfo> targetIndexList, List<AutoSyncConfig> configList, LocalDate minLastSyncDate){
+  public List<SyncJobDto> autoSyncIndexData(List<IndexInfo> targetList, List<AutoSyncConfig> configList, LocalDate minLastSyncDate){
 
-    LocalDate endDate = LocalDate.now().plusDays(1);
+    String startDateStr = minLastSyncDate.format(YYYYMMDD);
+    String endDateStr = LocalDate.now().plusDays(1).format(YYYYMMDD);
 
-    List<Long> ids = targetIndexList.stream().map(IndexInfo::getId).toList();
+    if (targetList.isEmpty()) {
+      log.warn("[지수 데이터 자동 연동] 대상 지수 없음.");
+      return Collections.emptyList();
+    }
+
+    Map<String, IndexInfo> indexInfoMap = targetList.stream()
+        .collect(Collectors.toMap(IndexInfo::getIndexName, i -> i, (existing, replacement) -> existing));
 
     Map<String, AutoSyncConfig> autoConfigMap = configList.stream()
         .collect(Collectors.toMap(
             config -> config.getIndexInfo().getIndexName(),
-            config -> config
+            config -> config,
+            (existing, replacement) -> existing
         ));
 
-    List<Item> fetchedItems = fetchAllItems(minLastSyncDate.format(YYYYMMDD), endDate.format(YYYYMMDD));
-    Map<String, Map<LocalDate, IndexData>> existingDataMap = buildExistingDataMapOptimized(ids,
-        minLastSyncDate, endDate);
+    List<Item> fetchedItems = fetchAllItems(startDateStr, endDateStr);
 
-    List<IndexData> newIndexDataList = new ArrayList<>();
-    List<IntegrationLog> logList = new ArrayList<>();
-    Map<String, IndexInfo> indexInfoMap = targetIndexList.stream()
-        .collect(Collectors.toMap(IndexInfo::getIndexName, i -> i));
+    if (fetchedItems.isEmpty()) {
+      log.warn("[지수 데이터 연동] API 응답 데이터 없음. 기간={} ~ {}", startDateStr, endDateStr);
+      return Collections.emptyList();
+    }
 
     List<Item> filteredItems = fetchedItems.stream()
         .filter(item -> {
@@ -402,32 +393,32 @@ public class IntegrationService {
         })
         .toList();
 
+    List<IndexData> indexDataList = new ArrayList<>();
+    List<IntegrationLog> logList = new ArrayList<>();
+
     for (Item item : filteredItems) {
       IndexInfo indexInfo = indexInfoMap.get(item.indexName());
-      if (indexInfo == null)
-        continue;
-      logList.add(autoProcessIndexDataItem(item, indexInfo, existingDataMap, newIndexDataList));
+      logList.add(autoProcessIndexDataItem(item, indexInfo, indexDataList));
     }
-    indexDataRepository.saveAll(newIndexDataList);
+    indexDataRepository.saveAll(indexDataList);
     integrationLogRepository.saveAll(logList);
+
+    log.info("[지수 데이터 자동 연동] 처리 완료. 총 {}건 (기간={} ~ {})",
+        indexDataList.size(), startDateStr, endDateStr);
     return logList.stream().map(syncJobMapper::toDto).toList();
   }
 
-  private IntegrationLog autoProcessIndexDataItem(Item item, IndexInfo indexInfo, Map<String, Map<LocalDate, IndexData>> existingDataMap
-      , List<IndexData> outputIndexDataList){
+  private IntegrationLog autoProcessIndexDataItem(Item item, IndexInfo indexInfo, List<IndexData> outputIndexDataList){
     LocalDate dataDate = parseLocalDate(item.dataBaseDate());
-    IndexData existing = Optional.ofNullable(existingDataMap.get(item.indexName()))
-        .map(dateMap -> dateMap.get(dataDate)).orElse(null);
-
     try {
-      if (existing != null) {
-        existing.updateFromApi(toIndexDataUpdateRequest(item));
-      } else {
-        outputIndexDataList.add(getIndexData(item, indexInfo, dataDate));
-      }
+      IndexData newIndexData = getIndexData(item, indexInfo, dataDate);
+      outputIndexDataList.add(newIndexData);
+      log.info("[지수 데이터 자동 등록 성공] 이름={}, 날짜={}", item.indexName(), dataDate);
       return IntegrationLog.createSuccess(JobType.INDEX_DATA, indexInfo, LocalDate.now(), "system");
 
     } catch (Exception e) {
+      log.error("[지수 데이터 자동 연동 에러] indexName={}, date={}, error={}",
+          item.indexName(), dataDate, e.getMessage());
       return IntegrationLog.createFailed(JobType.INDEX_DATA, indexInfo, LocalDate.now(), "system");
     }
   }

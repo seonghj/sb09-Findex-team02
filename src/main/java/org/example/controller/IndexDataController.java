@@ -55,7 +55,6 @@ public class IndexDataController {
   @PostMapping
   public Long create(@RequestBody IndexDataCreateRequest request) {
 
-
     return indexDataService.create(request);
 
   }
@@ -85,10 +84,9 @@ public class IndexDataController {
   @PatchMapping("/{id}")
   public Long update(
       @PathVariable Long id,
-      @RequestBody LocalDate baseDate,
       @RequestBody IndexDataUpdateRequest request
   ) {
-    return indexDataService.update(id, baseDate, request);
+    return indexDataService.update(id, request);
   }
 
   // 삭제 (DELETE)
@@ -100,10 +98,9 @@ public class IndexDataController {
   })
   @DeleteMapping("/{id}")
   public void delete(
-      @PathVariable Long id,
-      @RequestBody LocalDate baseDate
+      @PathVariable Long id
   ) {
-    indexDataService.delete(id, baseDate);
+    indexDataService.delete(id);
   }
 
 
